@@ -97,6 +97,10 @@ resource "aws_instance" "sockshop-k8s-master" {
       "sudo apt-get install docker.io -y",
       "sudo apt-get install -y kubelet kubeadm kubectl",
       "sudo apt-mark hold kubelet kubeadm kubectl",
+      "sudo mkdir -p /etc/containerd/",
+      "containerd config default | sudo tee /etc/containerd/config.toml",
+      "sudo sed -i 's/SystemdCgroup \\= false/SystemdCgroup \\= true/g' /etc/containerd/config.toml",
+      "sudo systemctl restart containerd"
     ]
   }
 }
@@ -127,61 +131,10 @@ resource "aws_instance" "sockshop-k8s-node" {
       "sudo apt-get install docker.io -y",
       "sudo apt-get install -y kubelet kubeadm kubectl",
       "sudo apt-mark hold kubelet kubeadm kubectl",
+      "sudo mkdir -p /etc/containerd/",
+      "containerd config default | sudo tee /etc/containerd/config.toml",
+      "sudo sed -i 's/SystemdCgroup \\= false/SystemdCgroup \\= true/g' /etc/containerd/config.toml",
+      "sudo systemctl restart containerd"
     ]
   }
-}
-
-resource "aws_lb" "k8s-control-plane-nlb" {
-  name               = "rt-k8s-control-plane-nlb"
-  internal           = false
-  security_groups    = [aws_security_group.k8s-security-group.id]
-  load_balancer_type = "network"
-  subnets            = data.aws_subnets.available.ids
-
-  enable_deletion_protection = false
-
-  tags = {
-    Name = "k8s-control-plane-nlb"
-  }
-}
-
-resource "aws_lb_target_group" "k8s-control-plane-target-group" {
-  name     = "rt-k8s-control-plane"
-  port     = 6443
-  protocol = "TCP"
-  vpc_id   = data.aws_vpc.default.id
-
-  health_check {
-    protocol           = "TCP"
-    port               = "traffic-port"
-    interval           = 30
-    timeout            = 5
-    healthy_threshold  = 3
-    unhealthy_threshold = 3
-  }
-
-  tags = {
-    Name = "k8s-control-plane-target-group"
-  }
-}
-
-resource "aws_lb_listener" "k8s-control-plane-listener" {
-  load_balancer_arn = aws_lb.k8s-control-plane-nlb.arn
-  port              = 6443
-  protocol          = "TCP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.k8s-control-plane-target-group.arn
-  }
-}
-
-resource "aws_lb_target_group_attachment" "k8s-control-plane-target-group-attachment" {
-  for_each = {
-    for k, v in aws_instance.sockshop-k8s-master:
-    k => v
-  }
-  target_group_arn = aws_lb_target_group.k8s-control-plane-target-group.arn
-  target_id        = each.value.id
-  port             = 6443
 }

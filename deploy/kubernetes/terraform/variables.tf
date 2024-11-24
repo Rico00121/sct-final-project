@@ -1,7 +1,7 @@
 variable "aws_amis" {
   description = "The AMI to use for setting up the instances."
   default = {
-    # Ubuntu Xenial 16.04 LTS
+    # Ubuntu 24.04 LTS
     "eu-west-3" = "ami-045a8ab02aadf4f88"
   }
 }
@@ -50,7 +50,7 @@ variable "master_instance_type" {
 
 variable "node_instance_type" {
   description = "The instance type to use for the Kubernetes nodes."
-  default     = "t2.medium"
+  default     = "t2.large"
 }
 
 variable "master_count" {
