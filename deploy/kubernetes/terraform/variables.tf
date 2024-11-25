@@ -1,8 +1,8 @@
 variable "aws_amis" {
   description = "The AMI to use for setting up the instances."
   default = {
-    # Ubuntu 24.04 LTS
-    "eu-west-3" = "ami-045a8ab02aadf4f88"
+    # Ubuntu 22.04 LTS
+    "eu-west-3" = "ami-07db896e164bc4476"
   }
 }
 
@@ -45,7 +45,7 @@ variable "key_name" {
 
 variable "master_instance_type" {
   description = "The instance type to use for the Kubernetes master."
-  default     = "t2.large"
+  default     = "t2.medium"
 }
 
 variable "node_instance_type" {
@@ -66,4 +66,21 @@ variable "node_count" {
 variable "private_key_path" {
   description = "The private key for connection to the instances as the user. Corresponds to the key_name variable."
   default     = "~/.ssh/deploy-docs-k8s.pem"
+}
+
+variable "initial_configuration_commands" {
+  default = [
+      "sudo swapoff -a",
+      "sudo apt-get update",
+      "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg",
+      "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list",
+      "sudo apt-get update",
+      "sudo apt-get install docker.io -y",
+      "sudo apt-get install -y kubelet kubeadm kubectl",
+      "sudo apt-mark hold kubelet kubeadm kubectl",
+      "sudo mkdir -p /etc/containerd/",
+      "containerd config default | sudo tee /etc/containerd/config.toml",
+      "sudo sed -i 's/SystemdCgroup \\= false/SystemdCgroup \\= true/g' /etc/containerd/config.toml",
+      "sudo systemctl restart containerd"
+    ]
 }

@@ -16,7 +16,3 @@ output "node_instance_type" {
   description = "The instance type for the worker nodes"
   value       = var.node_instance_type
 }
-
-output "aws_availability_zones" {
-  value       = data.aws_availability_zones.available
-}
