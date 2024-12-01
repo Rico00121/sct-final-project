@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: fluentd
-  namespace: default
+  namespace: kube-system
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -33,13 +33,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: fluentd
-  namespace: default
+  namespace: kube-system
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: fluentd
-  namespace: default
+  namespace: kube-system
   labels:
     k8s-app: fluentd-logging
     version: v1
@@ -71,7 +71,7 @@ spec:
               fieldRef:
                 fieldPath: spec.nodeName
           - name:  FLUENT_ELASTICSEARCH_HOST
-            value: "quickstart-es-http.default.svc.cluster.local"
+            value: "quickstart-es-http"
           - name:  FLUENT_ELASTICSEARCH_PORT
             value: "9200"
           - name: FLUENT_ELASTICSEARCH_SCHEME
@@ -98,10 +98,10 @@ spec:
                 key: elastic 
         resources:
           limits:
-            memory: 2Gi
+            memory: 200Mi
           requests:
-            cpu: 1
-            memory: 1Gi
+            cpu: 100m
+            memory: 200Mi
         volumeMounts:
         - name: varlog
           mountPath: /var/log
